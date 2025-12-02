@@ -129,38 +129,86 @@ function crushCandy (){
 }
 
 function crushThree() {
-    //check rows
+    // Track candies to crush
+    let toCrush = Array.from(Array(rows), () => Array(columns).fill(false));
+
+    // Check rows for groups of 3+
     for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < columns-2; c++) {
-            let candy1 = board[r][c];
-            let candy2 = board[r][c+1];
-            let candy3 = board[r][c+2];
-            if (candy1.src == candy2.src && candy2.src == candy3.src && !isBlank(candy1)) {
-                candy1.src = BLANK_IMAGE;
-                candy2.src = BLANK_IMAGE;
-                candy3.src = BLANK_IMAGE;
-                score += SCORE_INCREMENT;
+        let c = 0;
+        while (c < columns) {
+            let start = c;
+            let candySrc = board[r][c].src;
+            if (isBlank(board[r][c])) {
+                c++;
+                continue;
+            }
+            while (c < columns && board[r][c].src === candySrc && !isBlank(board[r][c])) {
+                c++;
+            }
+            let length = c - start;
+            if (length >= 3) {
+                for (let k = start; k < c; k++) {
+                    toCrush[r][k] = true;
+                }
             }
         }
     }
 
-    //check columns
+    // Check columns for groups of 3+
     for (let c = 0; c < columns; c++) {
-        for (let r = 0; r < rows-2; r++) {
-            let candy1 = board[r][c];
-            let candy2 = board[r+1][c];
-            let candy3 = board[r+2][c];
-            if (candy1.src == candy2.src && candy2.src == candy3.src && !isBlank(candy1)) {
-                candy1.src = BLANK_IMAGE;
-                candy2.src = BLANK_IMAGE;
-                candy3.src = BLANK_IMAGE;
-                score += SCORE_INCREMENT;
+        let r = 0;
+        while (r < rows) {
+            let start = r;
+            let candySrc = board[r][c].src;
+            if (isBlank(board[r][c])) {
+                r++;
+                continue;
+            }
+            while (r < rows && board[r][c].src === candySrc && !isBlank(board[r][c])) {
+                r++;
+            }
+            let length = r - start;
+            if (length >= 3) {
+                for (let k = start; k < r; k++) {
+                    toCrush[k][c] = true;
+                }
             }
         }
     }
+
+    // Check for 2x2 squares
+    for (let r = 0; r < rows - 1; r++) {
+        for (let c = 0; c < columns - 1; c++) {
+            let candySrc = board[r][c].src;
+            if (
+                !isBlank(board[r][c]) &&
+                board[r][c+1].src === candySrc &&
+                board[r+1][c].src === candySrc &&
+                board[r+1][c+1].src === candySrc
+            ) {
+                toCrush[r][c] = true;
+                toCrush[r][c+1] = true;
+                toCrush[r+1][c] = true;
+                toCrush[r+1][c+1] = true;
+            }
+        }
+    }
+
+    // Crush candies and update score
+    let crushed = 0;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < columns; c++) {
+            if (toCrush[r][c]) {
+                board[r][c].src = BLANK_IMAGE;
+                crushed++;
+            }
+        }
+    }
+    score += crushed * SCORE_INCREMENT;
 }
 
 function checkValid(){
+    // Check for row of 3+
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < columns-2; c++) {
             let candy1 = board[r][c];
@@ -172,13 +220,28 @@ function checkValid(){
         }
     }
 
-    //check columns
+    // Check for column of 3+
     for (let c = 0; c < columns; c++) {
         for (let r = 0; r < rows-2; r++) {
             let candy1 = board[r][c];
             let candy2 = board[r+1][c];
             let candy3 = board[r+2][c];
             if (candy1.src == candy2.src && candy2.src == candy3.src && !isBlank(candy1)) {
+                return true;
+            }
+        }
+    }
+
+    // Check for 2x2 square
+    for (let r = 0; r < rows-1; r++) {
+        for (let c = 0; c < columns-1; c++) {
+            let candySrc = board[r][c].src;
+            if (
+                !isBlank(board[r][c]) &&
+                board[r][c+1].src === candySrc &&
+                board[r+1][c].src === candySrc &&
+                board[r+1][c+1].src === candySrc
+            ) {
                 return true;
             }
         }
