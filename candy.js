@@ -172,12 +172,29 @@ function dragEnd() {
         currTile.src = otherImg;
         otherTile.src = currImg;
 
+        // Detect striped candy merge
+        let isCurrHorizontal = currImg.includes("-Striped-Horizontal");
+        let isCurrVertical = currImg.includes("-Striped-Vertical");
+        let isOtherHorizontal = otherImg.includes("-Striped-Horizontal");
+        let isOtherVertical = otherImg.includes("-Striped-Vertical");
+        if ((isCurrHorizontal || isCurrVertical) && (isOtherHorizontal || isOtherVertical)) {
+            // Always use the destination tile (otherTile) for explosion center
+            window.stripedCombo = {
+                r: r2,
+                c: c2
+            };
+            userMoveMade = true;
+            userMoves++;
+            document.getElementById("moves").innerText = userMoves;
+            return;
+        }
+
         let validMove = checkValid();
         if (!validMove){
-        let currImg = currTile.src;
-        let otherImg = otherTile.src;
-        currTile.src = otherImg;
-        otherTile.src = currImg;
+            let currImg = currTile.src;
+            let otherImg = otherTile.src;
+            currTile.src = otherImg;
+            otherTile.src = currImg;
         }
         else {
             userMoveMade = true;
@@ -281,6 +298,18 @@ function crushThree() {
     }
 
     // Striped candy explosion logic
+    // Special combo: if two striped candies are merged, explode both row and column
+    if (window.stripedCombo) {
+        // Only explode the row and column of the destination tile
+        let { r, c } = window.stripedCombo;
+        for (let cc = 0; cc < columns; cc++) {
+            toCrush[r][cc] = true;
+        }
+        for (let rr = 0; rr < rows; rr++) {
+            toCrush[rr][c] = true;
+        }
+        window.stripedCombo = null;
+    }
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < columns; c++) {
             if (toCrush[r][c]) {
