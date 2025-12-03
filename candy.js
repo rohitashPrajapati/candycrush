@@ -1,3 +1,11 @@
+function updateCandyPositions() {
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < columns; c++) {
+            let tile = board[r][c];
+            tile.style.transform = `translate(${c * 50}px, ${r * 50}px)`;
+        }
+    }
+}
 function getCandyColor(src) {
     // Extracts color name from src, ignoring striped suffixes
     let name = src.split("/").pop().split(".")[0];
@@ -23,11 +31,13 @@ function isBlank(tile) {
 
 window.onload = function(){
     startGame();
+    updateCandyPositions();
     //every 1/10th of sec recalls this bloody func
     window.setInterval(function(){
         crushCandy();
         slideCandy();
         generateCandy();
+        updateCandyPositions();
     },100)
 }
 
@@ -40,25 +50,23 @@ function startGame(){
     for(let r =0; r<rows;r++){
         let row = [];
         for(let c=0; c<columns ;c++){
-            // takes out a random pic from image folder
             let tile = document.createElement("img");
             tile.id = r.toString() + "-" + c.toString();
             tile.src = "./images/" + randomCandy() + ".png";
 
-            ///drag n drop functionality
-            tile.addEventListener("dragstart", dragStart); //click on a candy
-            tile.addEventListener("dragover", dragOver); // moving the candy while clicking on it
-            tile.addEventListener("dragenter", dragEnter);// dragging it onto a candy
-            tile.addEventListener("dragleave", dragLeave);//leaving it on another
-            tile.addEventListener("drop", dragDrop)//dropping on another candy
-            tile.addEventListener("dragend",dragEnd);//after process we swap
-
+            tile.addEventListener("dragstart", dragStart);
+            tile.addEventListener("dragover", dragOver);
+            tile.addEventListener("dragenter", dragEnter);
+            tile.addEventListener("dragleave", dragLeave);
+            tile.addEventListener("drop", dragDrop);
+            tile.addEventListener("dragend",dragEnd);
 
             document.getElementById("board").append(tile);
             row.push(tile);
         }
         board.push(row);
     }
+    updateCandyPositions();
     console.log(board);
 }
 
@@ -312,15 +320,17 @@ function slideCandy(){
         let ind = rows - 1;
         for (let r = rows - 1; r >= 0; r--) {
             if (!board[r][c].src.includes("blank")) {
-                board[ind][c].src = board[r][c].src;
+                if (ind !== r) {
+                    board[ind][c].src = board[r][c].src;
+                }
                 ind -= 1;
             }
         }
-
         for (let r = ind; r >= 0; r--) {
             board[r][c].src = BLANK_IMAGE;
         }
     }
+    updateCandyPositions();
 }
 
 function generateCandy(){
@@ -329,4 +339,5 @@ function generateCandy(){
             board[0][c].src = "./images/" + randomCandy() + ".png"
         }
     }
+    updateCandyPositions();
 }
