@@ -1,8 +1,13 @@
 function updateCandyPositions() {
+    const boardElem = document.getElementById("board");
+    const boardWidth = boardElem.offsetWidth;
+    const boardHeight = boardElem.offsetHeight;
+    const candyWidth = boardWidth / columns;
+    const candyHeight = boardHeight / rows;
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < columns; c++) {
             let tile = board[r][c];
-            tile.style.transform = `translate(${c * 50}px, ${r * 50}px)`;
+            tile.style.transform = `translate(${c * candyWidth}px, ${r * candyHeight}px)`;
         }
     }
 }
@@ -19,6 +24,7 @@ var board = [];
 var rows = 9;
 var columns = 9;
 var score = 0;
+var userMoveMade = false;
 
 
 var currTile;
@@ -60,6 +66,43 @@ function startGame(){
             tile.addEventListener("dragleave", dragLeave);
             tile.addEventListener("drop", dragDrop);
             tile.addEventListener("dragend",dragEnd);
+
+            // Touch event support for mobile
+            tile.addEventListener("touchstart", touchStart, {passive: false});
+            tile.addEventListener("touchmove", touchMove, {passive: false});
+            tile.addEventListener("touchend", touchEnd, {passive: false});
+// Touch event handlers
+let touchStartTile = null;
+let touchEndTile = null;
+
+function touchStart(e) {
+    e.preventDefault();
+    touchStartTile = this;
+}
+
+function touchMove(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (elem && elem.tagName === "IMG" && elem.parentElement.id === "board") {
+        touchEndTile = elem;
+    }
+}
+
+function touchEnd(e) {
+    e.preventDefault();
+    if (!touchStartTile || !touchEndTile || touchStartTile === touchEndTile) {
+        touchStartTile = null;
+        touchEndTile = null;
+        return;
+    }
+    // Simulate drag and drop logic
+    currTile = touchStartTile;
+    otherTile = touchEndTile;
+    dragEnd();
+    touchStartTile = null;
+    touchEndTile = null;
+}
 
             document.getElementById("board").append(tile);
             row.push(tile);
@@ -133,12 +176,17 @@ function dragEnd() {
         currTile.src = otherImg;
         otherTile.src = currImg;
         }
+        else {
+            userMoveMade = true;
+        }
     }
 }
 
 function crushCandy (){
     crushThree();
     document.getElementById("score").innerText = score;
+    // Reset user move flag after processing
+    userMoveMade = false;
 }
 
 function crushThree() {
@@ -261,7 +309,9 @@ function crushThree() {
             }
         }
     }
-    score += crushed * SCORE_INCREMENT;
+    if (userMoveMade) {
+        score += crushed * SCORE_INCREMENT;
+    }
 }
 
 function checkValid(){
