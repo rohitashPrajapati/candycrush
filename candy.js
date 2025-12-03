@@ -25,6 +25,7 @@ var rows = 9;
 var columns = 9;
 var score = 0;
 var userMoveMade = false;
+var userMoves = 0;
 
 
 var currTile;
@@ -38,12 +39,14 @@ function isBlank(tile) {
 window.onload = function(){
     startGame();
     updateCandyPositions();
+    document.getElementById("moves").innerText = userMoves;
     //every 1/10th of sec recalls this bloody func
     window.setInterval(function(){
         crushCandy();
         slideCandy();
         generateCandy();
         updateCandyPositions();
+        document.getElementById("moves").innerText = userMoves;
     },100)
 }
 
@@ -178,6 +181,8 @@ function dragEnd() {
         }
         else {
             userMoveMade = true;
+            userMoves++;
+            document.getElementById("moves").innerText = userMoves;
         }
     }
 }
