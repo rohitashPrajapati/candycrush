@@ -1,3 +1,8 @@
+function getCandyColor(src) {
+    // Extracts color name from src, ignoring striped suffixes
+    let name = src.split("/").pop().split(".")[0];
+    return name.replace("-Striped-Horizontal","").replace("-Striped-Vertical","");
+}
 
 const candies = ["Blue", "Orange", "Green", "Yellow", "Red", "Purple"];
 const BLANK_IMAGE = "./images/blank.png";
@@ -132,21 +137,31 @@ function crushThree() {
     // Track candies to crush
     let toCrush = Array.from(Array(rows), () => Array(columns).fill(false));
 
-    // Check rows for groups of 3+
+    // Check rows for groups of 3+ and 4 for striped
     for (let r = 0; r < rows; r++) {
         let c = 0;
         while (c < columns) {
             let start = c;
-            let candySrc = board[r][c].src;
+            let baseColor = getCandyColor(board[r][c].src);
             if (isBlank(board[r][c])) {
                 c++;
                 continue;
             }
-            while (c < columns && board[r][c].src === candySrc && !isBlank(board[r][c])) {
+            while (
+                c < columns &&
+                getCandyColor(board[r][c].src) === baseColor &&
+                !isBlank(board[r][c])
+            ) {
                 c++;
             }
             let length = c - start;
-            if (length >= 3) {
+            if (length >= 4) {
+                for (let k = start; k < c; k++) {
+                    toCrush[r][k] = true;
+                }
+                board[r][c-1].src = `./images/${baseColor}-Striped-Horizontal.png`;
+                toCrush[r][c-1] = false;
+            } else if (length >= 3) {
                 for (let k = start; k < c; k++) {
                     toCrush[r][k] = true;
                 }
@@ -154,21 +169,31 @@ function crushThree() {
         }
     }
 
-    // Check columns for groups of 3+
+    // Check columns for groups of 3+ and 4 for striped
     for (let c = 0; c < columns; c++) {
         let r = 0;
         while (r < rows) {
             let start = r;
-            let candySrc = board[r][c].src;
+            let baseColor = getCandyColor(board[r][c].src);
             if (isBlank(board[r][c])) {
                 r++;
                 continue;
             }
-            while (r < rows && board[r][c].src === candySrc && !isBlank(board[r][c])) {
+            while (
+                r < rows &&
+                getCandyColor(board[r][c].src) === baseColor &&
+                !isBlank(board[r][c])
+            ) {
                 r++;
             }
             let length = r - start;
-            if (length >= 3) {
+            if (length >= 4) {
+                for (let k = start; k < r; k++) {
+                    toCrush[k][c] = true;
+                }
+                board[r-1][c].src = `./images/${baseColor}-Striped-Vertical.png`;
+                toCrush[r-1][c] = false;
+            } else if (length >= 3) {
                 for (let k = start; k < r; k++) {
                     toCrush[k][c] = true;
                 }
@@ -194,6 +219,30 @@ function crushThree() {
         }
     }
 
+    // Striped candy explosion logic
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < columns; c++) {
+            if (toCrush[r][c]) {
+                let src = board[r][c].src;
+                if (src.includes("-Striped-Horizontal")) {
+                    // Remove entire row
+                    for (let cc = 0; cc < columns; cc++) {
+                        if (!isBlank(board[r][cc])) {
+                            toCrush[r][cc] = true;
+                        }
+                    }
+                } else if (src.includes("-Striped-Vertical")) {
+                    // Remove entire column
+                    for (let rr = 0; rr < rows; rr++) {
+                        if (!isBlank(board[rr][c])) {
+                            toCrush[rr][c] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Crush candies and update score
     let crushed = 0;
     for (let r = 0; r < rows; r++) {
@@ -214,7 +263,11 @@ function checkValid(){
             let candy1 = board[r][c];
             let candy2 = board[r][c+1];
             let candy3 = board[r][c+2];
-            if (candy1.src == candy2.src && candy2.src == candy3.src && !isBlank(candy1)) {
+            if (
+                getCandyColor(candy1.src) === getCandyColor(candy2.src) &&
+                getCandyColor(candy2.src) === getCandyColor(candy3.src) &&
+                !isBlank(candy1)
+            ) {
                 return true;
             }
         }
@@ -226,7 +279,11 @@ function checkValid(){
             let candy1 = board[r][c];
             let candy2 = board[r+1][c];
             let candy3 = board[r+2][c];
-            if (candy1.src == candy2.src && candy2.src == candy3.src && !isBlank(candy1)) {
+            if (
+                getCandyColor(candy1.src) === getCandyColor(candy2.src) &&
+                getCandyColor(candy2.src) === getCandyColor(candy3.src) &&
+                !isBlank(candy1)
+            ) {
                 return true;
             }
         }
